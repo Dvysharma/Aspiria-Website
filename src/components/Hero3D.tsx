@@ -36,16 +36,30 @@ const Robot3D = ({ isDark, onPoke, isGreeting }: Robot3DProps) => {
       lastMouseMoveTimeRef.current = Date.now();
     };
 
+    const handleTouch = (event: TouchEvent) => {
+      if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        const x = (touch.clientX / window.innerWidth) * 2 - 1;
+        const y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        globalMouseRef.current = { x, y };
+        lastMouseMoveTimeRef.current = Date.now();
+      }
+    };
+
     const handleMouseLeave = () => {
       // Centered default when mouse leaves the page
       globalMouseRef.current = { x: 0, y: 0 };
     };
 
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchstart', handleTouch, { passive: true });
+    window.addEventListener('touchmove', handleTouch, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('touchmove', handleTouch);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
@@ -421,8 +435,6 @@ export const Hero3D = () => {
         <pointLight position={[0, -6, 6]} intensity={isDark ? 0.6 : 0.6} color={isDark ? "#7c3aed" : "#0ea5e9"} />
         
         <Robot3D isDark={isDark} onPoke={triggerGreeting} isGreeting={greeting} />
-        
-        <OrbitControls enableZoom={false} enablePan={false} />
         
         {isDark && (
           <Stars 

@@ -27,17 +27,34 @@ Deno.serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+    let endpoint = "";
+    let apiKey = "";
+    let model = "";
+
+    if (OPENROUTER_API_KEY) {
+      endpoint = "https://openrouter.ai/api/v1/chat/completions";
+      apiKey = OPENROUTER_API_KEY;
+      model = "openai/gpt-4o-mini";
+    } else if (LOVABLE_API_KEY) {
+      endpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
+      apiKey = LOVABLE_API_KEY;
+      model = "google/gemini-3-flash-preview";
+    } else {
+      throw new Error("Neither OPENROUTER_API_KEY nor LOVABLE_API_KEY is configured in Supabase secrets.");
+    }
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
         stream: true,
       }),
